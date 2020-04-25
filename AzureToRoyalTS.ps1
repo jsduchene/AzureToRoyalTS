@@ -1,3 +1,21 @@
+##############################################################################
+##############################################################################
+##							Azure To Royal TS Script
+##							Created by Jean-Sébastien DUCHÊNE
+##							Website : microsofttouch.fr
+##							Inspired from script Ryan Hoffman (tekmaven)
+##							Version 0.0.8
+##
+##	Basic script to build Royal TS Document from Azure Subscriptions for 
+##  Windows VM Only I was bored to download RDP file each time.
+##  It does not take lots of scenarios and does not handle all exceptions
+##  Requirements : PowerShell 5.1
+## 				   Import-Module RoyalDocument.PowerShell
+## 				   Import-Module AzureRM.Compute
+## 				   Import-Module AzureRM.Network
+##############################################################################
+##############################################################################
+
 #Auth to your azure account
 Add-AzureRmAccount
 
