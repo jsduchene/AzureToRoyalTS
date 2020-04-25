@@ -2,7 +2,7 @@
 Basic script to build Royal TS Document from Azure Subscriptions for Windows VM Only
 I was bored to download RDP file each time.
 
-First this script is inspired from a previous project held by ...
+First this script is inspired from a previous project held by Ryan Hoffman (tekmaven)
 This is a refresh to take ARM and Royal TS new PowerShell Module.
 
 ###### Requirements #######
