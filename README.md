@@ -23,7 +23,7 @@ This is a refresh to take ARM and Royal TS new PowerShell Module.
 This script has been created for Lab Scenarios. There is no Warranty !!
 There are several scenarios which are not taken into consideration :
 - Azure Bastion
-- Linux VMs with SSL
+- Linux VMs with SSH
 - VMs without public IP Address
 - Different credentials for group of VMs
 - RDP port customization. I've put the default port but you can change it in the script. I do not browse for NSG looking at the RDP port.
