@@ -35,7 +35,7 @@ function CreateRoyalFolders()
 	}
 	$CredentialFolder = Get-RoyalObject -Name "Credentials" -Folder $RootFolder
 	$AzCredential = New-RoyalObject -Folder $CredentialFolder -Name "AZCredentials" -Type RoyalCredential
-	$AzCredential.UserName = "WINDOWSTOUCH\jsduchene"
+	$AzCredential.UserName = $credential
 	
 	return $currentFolder
 }
@@ -48,6 +48,7 @@ function CreateRoyalFolders()
 $fileName = "<PATH TO THE DOCUMENT>\AzureEnvironment.rtsz"
 $azCredential = "<PUT YOUR USER ACCOUNT THERE>"
 $docName = "Microsoft Azure Environment"
+$rdpPort = 3389
 
 # Instantiate the document
 $store = New-RoyalStore -UserName ((Get-Item Env:\USERNAME).Value)
@@ -83,7 +84,7 @@ foreach($activeSubscription in (Get-AzureRmSubscription | Sort SubscriptionName)
 			$publicIpAddress = (Get-AzureRmPublicIpAddress -ResourceGroupName $vm.ResourceGroupName -Name $publicIpName).IpAddress
 			# Creating the connection
 			if($publicIpAddress -ne "Not Assigned") {
-				$uri = "$($publicIpAddress):3389";
+				$uri = "$($publicIpAddress):$($rdpPort)";
 				Write-Host "Importing Windows VM - $vmName - $uri"
 
 				$lastFolder = CreateRoyalFolders -FolderStructure "Connections/$subscriptionName" -Splitter  "\/" -Folder $royalDocument -Credential $azCredential
