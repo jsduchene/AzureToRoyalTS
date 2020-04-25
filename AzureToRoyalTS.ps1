@@ -33,9 +33,6 @@ function CreateRoyalFolders()
 			$currentFolder  = $newFolder
 		}	
 	}
-	$CredentialFolder = Get-RoyalObject -Name "Credentials" -Folder $RootFolder
-	$AzCredential = New-RoyalObject -Folder $CredentialFolder -Name "AZCredentials" -Type RoyalCredential
-	$AzCredential.UserName = $credential
 	
 	return $currentFolder
 }
@@ -45,8 +42,8 @@ function CreateRoyalFolders()
 # 
 # To modify according you needs
 ##############################################
-$fileName = "<PATH TO THE DOCUMENT>\AzureEnvironment.rtsz"
-$azCredential = "<PUT YOUR USER ACCOUNT THERE>"
+$fileName = "C:\Users\jeansebastien.duchen\OneDrive - Magellan Partners\Documents\AzureEnv.rtsz"
+$credential = "WINDOWSTOUCH\jsduchene"
 $docName = "Microsoft Azure Environment"
 $rdpPort = 3389
 
@@ -65,43 +62,59 @@ foreach($activeSubscription in (Get-AzureRmSubscription | Sort SubscriptionName)
 
     Select-AzureRmSubscription -SubscriptionId $activeSubscription.SubscriptionId
 	
-	#Check Resource Provider of Subscription
+	#Check Resource Provider of Subscription 
 	
 	If((Get-AzureRmResourceProvider | Where-Object {$_.ProviderNamespace -Match "Microsoft.Compute"}) -ne $null)
 	{
+		
 		# Loading VMs
 		$vms = Get-AzureRmVM
-		foreach ($vm in $vms)
+		if ($vms -ne $null)
 		{
-			$vmName = $vm.Name
-			$nic = $vm.NetworkProfile.NetworkInterfaces[0].Id.Split('/') | select -Last 1
-			if ( (Get-AzureRmNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress -eq $null )
+			If ($AzCredential -eq $null)
 			{
-				continue
+				# Create Azure Credentials
+				$CredentialFolder = Get-RoyalObject -Name "Credentials" -Folder $royalDocument
+				$AzCredential = New-RoyalObject -Folder $CredentialFolder -Name "AZCredentials" -Type RoyalCredential
+				$AzCredential.UserName = $credential
 			}
-			# Getting Public IP Address
-			$publicIpName =  (Get-AzureRmNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress.Id.Split('/') | select -Last 1
-			$publicIpAddress = (Get-AzureRmPublicIpAddress -ResourceGroupName $vm.ResourceGroupName -Name $publicIpName).IpAddress
-			# Creating the connection
-			if($publicIpAddress -ne "Not Assigned") {
-				$uri = "$($publicIpAddress):$($rdpPort)";
-				Write-Host "Importing Windows VM - $vmName - $uri"
+			
+			foreach ($vm in $vms)
+			{
+				$vmName = $vm.Name
+				$nic = $vm.NetworkProfile.NetworkInterfaces[0].Id.Split('/') | select -Last 1
+				if ( (Get-AzureRmNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress -eq $null )
+				{
+					continue
+				}
+				# Getting Public IP Address
+				$publicIpName =  (Get-AzureRmNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress.Id.Split('/') | select -Last 1
+				$publicIpAddress = (Get-AzureRmPublicIpAddress -ResourceGroupName $vm.ResourceGroupName -Name $publicIpName).IpAddress
+				# Creating the connection
+				if($publicIpAddress -ne "Not Assigned") {
+					$uri = "$($publicIpAddress):$($rdpPort)";
+					Write-Host "Importing Windows VM - $vmName - $uri"
 
-				$lastFolder = CreateRoyalFolders -FolderStructure "Connections/$subscriptionName" -Splitter  "\/" -Folder $royalDocument -Credential $azCredential
+					$lastFolder = CreateRoyalFolders -FolderStructure "Connections/$subscriptionName" -Splitter  "\/" -Folder $royalDocument
 
-				$newConnection = New-RoyalObject -Folder $lastFolder -Type RoyalRDSConnection -Name $vmName
-				$newConnection.URI = $uri
-				$newConnection.CredentialMode = 4
-				$newConnection.CredentialName = "AZCredentials"
+					$newConnection = New-RoyalObject -Folder $lastFolder -Type RoyalRDSConnection -Name $vmName
+					$newConnection.URI = $uri
+					$newConnection.CredentialMode = 4
+					$newConnection.CredentialName = "AZCredentials"
+				}
+				else {
+					Write-Host "Skipping $vmName, no public ip address"
+				}
 			}
-			else {
-				Write-Host "Skipping $vmName, no public ip address"
-			}
+		}
+		else
+		{
+			Write-Host "No VMs on this subscription"
 		}
 	}
 	else
 	{
-		Write-Host "/!\ Subscription does not contain Computer Provider"
+		Write-Host "/!\ Subscription does not contain Azure.Compute Provider"
 	}
 }
 
