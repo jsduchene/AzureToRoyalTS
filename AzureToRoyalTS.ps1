@@ -4,25 +4,23 @@
 ##							Created by Jean-Sébastien DUCHÊNE
 ##							Website : microsofttouch.fr
 ##							Inspired from script Ryan Hoffman (tekmaven)
-##							Version 0.0.8
+##							Version 0.1.0 (Updated for AzureRM Depreciation)
 ##
 ##	Basic script to build Royal TS Document from Azure Subscriptions for 
 ##  Windows VM Only I was bored to download RDP file each time.
 ##  It does not take lots of scenarios and does not handle all exceptions
 ##  Requirements : PowerShell 5.1
 ## 				   Import-Module RoyalDocument.PowerShell
-## 				   Import-Module AzureRM.Compute
-## 				   Import-Module AzureRM.Network
+## 				   Import-Module Az
 ##############################################################################
 ##############################################################################
 
 #Auth to your azure account
-Add-AzureRmAccount
+Add-AzAccount
 
 #Import required modules
 Import-Module RoyalDocument.PowerShell
-Import-Module AzureRM.Compute
-Import-Module AzureRM.Network
+
 
 # Function CreateRoyalFolder to populate the document
 function CreateRoyalFolders()
@@ -60,8 +58,8 @@ function CreateRoyalFolders()
 # 
 # To modify according you needs
 ##############################################
-$fileName = "C:\Users\jeansebastien.duchen\OneDrive - Magellan Partners\Documents\AzureEnv.rtsz"
-$credential = "WINDOWSTOUCH\jsduchene"
+$fileName = "<PATHTOSTORERTSZ>\AzureEnv.rtsz"
+$credential = "<AZURE CREDENTIAL>"
 $docName = "Microsoft Azure Environment"
 $rdpPort = 3389
 
@@ -72,21 +70,21 @@ $royalDocument = New-RoyalDocument -Store $store -Name $docName -FileName $fileN
 
 
 # Browse Azure to create connection
-foreach($activeSubscription in (Get-AzureRmSubscription | Sort SubscriptionName)) {
+foreach($activeSubscription in (Get-AzSubscription | Sort SubscriptionName)) {
     
     $subscriptionName = $activeSubscription.Name
 	Write-Host "#######   Next Subscription    #########################"
     Write-Host "Importing Subscription: $subscriptionName - $($activeSubscription.SubscriptionId)"
 
-    Select-AzureRmSubscription -SubscriptionId $activeSubscription.SubscriptionId
+    Select-AzSubscription -Subscription $activeSubscription.SubscriptionId
 	
 	#Check Resource Provider of Subscription 
 	
-	If((Get-AzureRmResourceProvider | Where-Object {$_.ProviderNamespace -Match "Microsoft.Compute"}) -ne $null)
+	If((Get-AzResourceProvider | Where-Object {$_.ProviderNamespace -Match "Microsoft.Compute"}) -ne $null)
 	{
 		
 		# Loading VMs
-		$vms = Get-AzureRmVM
+		$vms = Get-AzVM
 		if ($vms -ne $null)
 		{
 			If ($AzCredential -eq $null)
@@ -101,13 +99,13 @@ foreach($activeSubscription in (Get-AzureRmSubscription | Sort SubscriptionName)
 			{
 				$vmName = $vm.Name
 				$nic = $vm.NetworkProfile.NetworkInterfaces[0].Id.Split('/') | select -Last 1
-				if ( (Get-AzureRmNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress -eq $null )
+				if ( (Get-AzNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress -eq $null )
 				{
 					continue
 				}
 				# Getting Public IP Address
-				$publicIpName =  (Get-AzureRmNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress.Id.Split('/') | select -Last 1
-				$publicIpAddress = (Get-AzureRmPublicIpAddress -ResourceGroupName $vm.ResourceGroupName -Name $publicIpName).IpAddress
+				$publicIpName =  (Get-AzNetworkInterface -ResourceGroupName $vm.ResourceGroupName -Name $nic).IpConfigurations.PublicIpAddress.Id.Split('/') | select -Last 1
+				$publicIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $vm.ResourceGroupName -Name $publicIpName).IpAddress
 				# Creating the connection
 				if($publicIpAddress -ne "Not Assigned") {
 					$uri = "$($publicIpAddress):$($rdpPort)";
