@@ -4,7 +4,7 @@
 ##							Created by Jean-Sébastien DUCHÊNE
 ##							Website : microsofttouch.fr
 ##							Inspired from script Ryan Hoffman (tekmaven)
-##							Version 0.1.0 (Updated for AzureRM Depreciation)
+##							Version 1.0.0 (Updated for AzureRM Depreciation)
 ##
 ##	Basic script to build Royal TS Document from Azure Subscriptions for 
 ##  Windows VM Only I was bored to download RDP file each time.
